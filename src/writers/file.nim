@@ -1,5 +1,5 @@
 from ../nimlog import Entry, Writer, Severity, newLogErr, Formatter
-from ../formatters/message import newMessageFormatter
+from ../formatters/message import newMessageFormatter, Format
 
 from strutils import `%`
 
@@ -42,12 +42,16 @@ proc newFileWriter*(
   minSeverity: Severity = Severity.CUSTOM, 
   append, mustWrite: bool = true, 
   flushAfter: int = 1, 
+  format: string = nil,
   formatter: Formatter = nil
 ): FileWriter =
   
   var formatter = formatter
   if formatter == nil:
-    formatter = newMessageFormatter()
+    var format = format
+    if format == nil:
+      format = Format.DEFAULT.`$`
+    formatter = newMessageFormatter(format)
 
   if file == nil and (path == nil or path == ""):
     raise newLogErr("Must specify either file or filePath")

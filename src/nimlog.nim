@@ -361,6 +361,15 @@ proc withFields*(l: Logger, fields: tuple): Entry =
   )
 
 
+proc newEntry*(facility: string, severity: Severity, msg: string, fields: ValueMap = nil): Entry =
+  Entry(
+    facility: facility,
+    severity: severity,
+    msg: msg,
+    time: times.getLocalTime(times.getTime()),
+    `fields`: fields
+  )
+
 proc addField*[T](e: Entry, name: string, value: T): Entry =
   e.fields[name] = value
   return e
