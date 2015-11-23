@@ -12,5 +12,5 @@ method format(f: DefaultFieldsFormatter, e: ref Entry) =
   e[].fields.facility = e.facility
   e[].fields.msg = e.msg
 
-proc newFieldsFormatter*(): Formatter =
+proc newFieldsFormatter*(): DefaultFieldsFormatter =
   DefaultFieldsFormatter()

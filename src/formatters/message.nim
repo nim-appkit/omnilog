@@ -58,8 +58,8 @@ method format(f: MessageFormatter, e: ref Entry) =
 
   e[].msg = msg
 
-proc newMessageFormatter*(format: Format = Format.DEFAULT): Formatter =
+proc newMessageFormatter*(format: Format = Format.DEFAULT): MessageFormatter =
   MessageFormatter(format: $format)
 
-proc newMessageFormatter*(format: string): Formatter =
+proc newMessageFormatter*(format: string): MessageFormatter =
   MessageFormatter(format: format)

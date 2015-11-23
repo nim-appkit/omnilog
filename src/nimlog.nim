@@ -34,7 +34,7 @@ type
     CUSTOM
 
   Entry* = object
-    logger: Logger
+    logger*: Logger
 
     facility*: string
     severity*: Severity
@@ -82,7 +82,7 @@ method format(f: Formatter, e: ref Entry) {.base.} =
 # Writer. #
 ###########
 
-method shouldWrite(w: Writer, e: Entry): bool {.base.} =
+method shouldWrite*(w: Writer, e: Entry): bool {.base.} =
   if e.severity > w.minSeverity:
     return false
   for f in w.filters:
@@ -90,10 +90,10 @@ method shouldWrite(w: Writer, e: Entry): bool {.base.} =
       return false 
   return true
 
-method doWrite(w: Writer, e: Entry) {.base.} =
+method doWrite*(w: Writer, e: Entry) {.base.} =
   assert false, "Writer does not implement .doWrite()"
 
-method write(w: Writer, e: Entry) {.base.} =
+method write*(w: Writer, e: Entry) {.base.} =
   if not w.shouldWrite(e):
     return
   var eRef: ref Entry
@@ -103,12 +103,12 @@ method write(w: Writer, e: Entry) {.base.} =
     f.format(eRef)
   w.doWrite(eRef[])
 
-proc addFilter(w: Writer, filter: proc(e: Entry): bool) =
+proc addFilter*(w: Writer, filter: proc(e: Entry): bool) =
   if w.filters == nil:
     w.filters = @[]
   w.filters.add(filter)
 
-proc addFormatter(w: Writer, formatter: Formatter) =
+proc addFormatter*(w: Writer, formatter: Formatter) =
   if w.formatters == nil:
     w.formatters = @[]
   w.formatters.add(formatter)
@@ -181,12 +181,12 @@ proc getLogger*(l: Logger, facility: string): Logger =
 
   Logger(facility: facility, `config`: config)
 
-proc setSeverity(l: Logger, s: Severity) =
+proc setSeverity*(l: Logger, s: Severity) =
   if l.config.facility != l.facility:
     l.config = l.config.buildChild(l.facility)
   l.config.minSeverity = s
 
-proc addWriter(l: Logger, name: string, w: Writer) =
+proc addWriter*(l: Logger, name: string, w: Writer) =
   if l.config.facility != l.facility:
     l.config = l.config.buildChild(l.facility)
   if not l.config.hasWriters:
@@ -194,12 +194,12 @@ proc addWriter(l: Logger, name: string, w: Writer) =
     l.config.hasWriters = true
   l.config.writers[name] = w
 
-proc clearWriters(l: Logger) =
+proc clearWriters*(l: Logger) =
   if l.config.facility != l.facility:
     l.config = l.config.buildChild(l.facility)
   l.config.writers = initTable[string, Writer]()
 
-proc getWriter(l: Logger, name: string): Writer =
+proc getWriter*(l: Logger, name: string): Writer =
   var conf = l.config
   while not conf.hasWriters:
     conf = conf.parent
@@ -207,32 +207,32 @@ proc getWriter(l: Logger, name: string): Writer =
     raise newLogErr("Unknown writer: '" & name & "'")
   conf.writers[name]
 
-proc addFormatter(l: Logger, f: Formatter) =
+proc addFormatter*(l: Logger, f: Formatter) =
   if l.config.facility != l.facility:
     l.config = l.config.buildChild(l.facility)
     l.config.formatters = l.config.parent.formatters
   l.config.formatters.add(f)
 
-proc clearFormatters(l: Logger) =
+proc clearFormatters*(l: Logger) =
   if l.config.facility != l.facility:
     l.config = l.config.buildChild(l.facility)
   l.config.formatters = @[]
 
-proc setFormatter(l: Logger, f: Formatter) =
+proc setFormatter*(l: Logger, f: Formatter) =
   l.clearFormatters()
   l.config.formatters.add(f)
 
-proc setFormatters(l: Logger, f: seq[Formatter]) =
+proc setFormatters*(l: Logger, f: seq[Formatter]) =
   l.clearFormatters()
   l.config.formatters = f
 
-proc getFormatters(l: Logger): seq[Formatter] =
+proc getFormatters*(l: Logger): seq[Formatter] =
   l.config.getFormatters()
 
-proc registerSeverity(l: Logger, severity: string) =
+proc registerSeverity*(l: Logger, severity: string) =
   l.config.rootConfig.customSeverities.add(severity)
 
-proc newRootLogger(withDefaultWriter: bool = true): Logger =
+proc newRootLogger*(withDefaultWriter: bool = true): Logger =
   result = Logger(
     facility: "",
     config: newRootConfig()
@@ -245,7 +245,7 @@ proc newRootLogger(withDefaultWriter: bool = true): Logger =
 # Logger logging procs. #
 #########################
 
-proc log(l: Logger, e: Entry) =
+proc log*(l: Logger, e: Entry) =
   # Log arbitrary entries.
 
   if e.severity == Severity.UNKNOWN:
@@ -271,7 +271,7 @@ proc log(l: Logger, e: Entry) =
 
 # General severity log.
 
-proc log(l: Logger, severity: Severity, msg: string, args: varargs[string, `$`]) =
+proc log*(l: Logger, severity: Severity, msg: string, args: varargs[string, `$`]) =
   # Log a message with specified severity.
 
   var e = Entry(
@@ -284,7 +284,7 @@ proc log(l: Logger, severity: Severity, msg: string, args: varargs[string, `$`])
 
 # General custom Severity log.
 
-proc log(l: Logger, customSeverity: string, msg: string, args: varargs[string, `$`]) =
+proc log*(l: Logger, customSeverity: string, msg: string, args: varargs[string, `$`]) =
   # Log a message with a custom severity.
 
   if not (l.config.getCustomSeverities().contains(customSeverity)):
@@ -300,42 +300,42 @@ proc log(l: Logger, customSeverity: string, msg: string, args: varargs[string, `
 
 # Emergency.
 
-proc emergency(l: Logger, msg: string, args: varargs[string, `$`]) =
+proc emergency*(l: Logger, msg: string, args: varargs[string, `$`]) =
   l.log(Severity.EMERGENCY, msg, args)
 
 # Alert.
 
-proc alert(l: Logger, msg: string, args: varargs[string, `$`]) =
+proc alert*(l: Logger, msg: string, args: varargs[string, `$`]) =
   l.log(Severity.ALERT, msg, args)
 
 # Critical.
 
-proc critical(l: Logger, msg: string, args: varargs[string, `$`]) =
+proc critical*(l: Logger, msg: string, args: varargs[string, `$`]) =
   l.log(Severity.CRITICAL, msg, args)
 
 # Error.
 
-proc error(l: Logger, msg: string, args: varargs[string, `$`]) =
+proc error*(l: Logger, msg: string, args: varargs[string, `$`]) =
   l.log(Severity.ERROR, msg, args)
 
 # Warning.
 
-proc warning(l: Logger, msg: string, args: varargs[string, `$`]) =
+proc warning*(l: Logger, msg: string, args: varargs[string, `$`]) =
   l.log(Severity.WARNING, msg, args)
 
 # Notice.
 
-proc notice(l: Logger, msg: string, args: varargs[string, `$`]) =
+proc notice*(l: Logger, msg: string, args: varargs[string, `$`]) =
   l.log(Severity.NOTICE, msg, args)
 
 # Info.
 
-proc info(l: Logger, msg: string, args: varargs[string, `$`]) =
+proc info*(l: Logger, msg: string, args: varargs[string, `$`]) =
   l.log(Severity.INFO, msg, args)
 
 # Debug.
 
-proc debug(l: Logger, msg: string, args: varargs[string, `$`]) =
+proc debug*(l: Logger, msg: string, args: varargs[string, `$`]) =
   l.log(Severity.DEBUG, msg, args)
 
 
@@ -344,7 +344,7 @@ proc debug(l: Logger, msg: string, args: varargs[string, `$`]) =
 # Entry field logic. #
 ######################
 
-proc withField[T](l: Logger, name: string, value: T): Entry =
+proc withField*[T](l: Logger, name: string, value: T): Entry =
   var m = newValueMap()
   m[name] = value
   Entry(
@@ -353,7 +353,7 @@ proc withField[T](l: Logger, name: string, value: T): Entry =
     time: times.getLocalTime(times.getTime())
   )
 
-proc withFields(l: Logger, fields: tuple): Entry =
+proc withFields*(l: Logger, fields: tuple): Entry =
   Entry(
     logger: l,
     fields: toValue(fields).getMap(),
@@ -361,18 +361,18 @@ proc withFields(l: Logger, fields: tuple): Entry =
   )
 
 
-proc addField[T](e: Entry, name: string, value: T): Entry =
+proc addField*[T](e: Entry, name: string, value: T): Entry =
   e.fields[name] = value
   return e
 
-proc addFields(e: Entry, t: tuple): Entry =
+proc addFields*(e: Entry, t: tuple): Entry =
   if e.fields == nil:
     e.fields = newValueMap()
   for key, val in t.fieldPairs:
     e.fields[key] = val
   return e
 
-proc log(e: Entry, severity: Severity, msg: string, args: varargs[string, `$`]) =
+proc log*(e: Entry, severity: Severity, msg: string, args: varargs[string, `$`]) =
   # Log a message with specified severity.
   var e = e
   e.severity = severity
@@ -381,7 +381,7 @@ proc log(e: Entry, severity: Severity, msg: string, args: varargs[string, `$`]) 
 
 # General custom Severity log.
 
-proc log(e: Entry, customSeverity: string, msg: string, args: varargs[string, `$`]) =
+proc log*(e: Entry, customSeverity: string, msg: string, args: varargs[string, `$`]) =
   # Log a message with a custom severity.
   if not (e.logger.config.getCustomSeverities().contains(customSeverity)):
     raise newLogErr("Unregistered custom severity: " & customSeverity)
@@ -393,42 +393,42 @@ proc log(e: Entry, customSeverity: string, msg: string, args: varargs[string, `$
 
 # Emergency.
 
-proc emergency(e: Entry, msg: string, args: varargs[string, `$`]) =
+proc emergency*(e: Entry, msg: string, args: varargs[string, `$`]) =
   e.log(Severity.EMERGENCY, msg, args)
 
 # Alert.
 
-proc alert(e: Entry, msg: string, args: varargs[string, `$`]) =
+proc alert*(e: Entry, msg: string, args: varargs[string, `$`]) =
   e.log(Severity.ALERT, msg, args)
 
 # Critical.
 
-proc critical(e: Entry, msg: string, args: varargs[string, `$`]) =
+proc critical*(e: Entry, msg: string, args: varargs[string, `$`]) =
   e.log(Severity.CRITICAL, msg, args)
 
 # Error.
 
-proc error(e: Entry, msg: string, args: varargs[string, `$`]) =
+proc error*(e: Entry, msg: string, args: varargs[string, `$`]) =
   e.log(Severity.ERROR, msg, args)
 
 # Warning.
 
-proc warning(e: Entry, msg: string, args: varargs[string, `$`]) =
+proc warning*(e: Entry, msg: string, args: varargs[string, `$`]) =
   e.log(Severity.WARNING, msg, args)
 
 # Notice.
 
-proc notice(e: Entry, msg: string, args: varargs[string, `$`]) =
+proc notice*(e: Entry, msg: string, args: varargs[string, `$`]) =
   e.log(Severity.NOTICE, msg, args)
 
 # Info.
 
-proc info(e: Entry, msg: string, args: varargs[string, `$`]) =
+proc info*(e: Entry, msg: string, args: varargs[string, `$`]) =
   e.log(Severity.INFO, msg, args)
 
 # Debug.
 
-proc debug(e: Entry, msg: string, args: varargs[string, `$`]) =
+proc debug*(e: Entry, msg: string, args: varargs[string, `$`]) =
   e.log(Severity.DEBUG, msg, args)
 
 
@@ -439,65 +439,65 @@ proc debug(e: Entry, msg: string, args: varargs[string, `$`]) =
 
 var globalLogger = newRootLogger()
 
-proc setFormat(format: string) =
+proc setFormat*(format: string) =
   for w in globalLogger.config.getWriters():
     for f in w.formatters:
       if f is MessageFormatter:
         cast[MessageFormatter](f).setFormat(format)
 
-proc setFormat(format: Format) =
+proc setFormat*(format: Format) =
   setFormat($format)
 
-proc withField[T](name: string, val: T): Entry =
+proc withField*[T](name: string, val: T): Entry =
   globalLogger.withField(name, val)
 
-proc logFields(fields: tuple): Entry =
+proc logFields*(fields: tuple): Entry =
   globalLogger.withFields(fields)
 
-proc log(severity: Severity, msg: string, args: varargs[string, `$`]) =
+proc log*(severity: Severity, msg: string, args: varargs[string, `$`]) =
   globalLogger.log(severity, msg, args)
 
 # General custom Severity log.
 
-proc log(customSeverity: string, msg: string, args: varargs[string, `$`]) =
+proc log*(customSeverity: string, msg: string, args: varargs[string, `$`]) =
   globalLogger.log(customSeverity, msg, args)
 
 # Emergency.
 
-proc emergency(msg: string, args: varargs[string, `$`]) =
+proc emergency*(msg: string, args: varargs[string, `$`]) =
   globalLogger.emergency(msg, args)
 
 # Alert.
 
-proc alert(msg: string, args: varargs[string, `$`]) =
+proc alert*(msg: string, args: varargs[string, `$`]) =
   globalLogger.alert(msg, args)
 
 # Critical.
 
-proc critical(msg: string, args: varargs[string, `$`]) =
+proc critical*(msg: string, args: varargs[string, `$`]) =
   globalLogger.critical(msg, args)
 
 # Error.
 
-proc error(msg: string, args: varargs[string, `$`]) =
+proc error*(msg: string, args: varargs[string, `$`]) =
   globalLogger.error(msg, args)
 
 # Warning.
 
-proc warning(msg: string, args: varargs[string, `$`]) =
+proc warning*(msg: string, args: varargs[string, `$`]) =
   globalLogger.warning(msg, args)
 
 # Notice.
 
-proc notice(msg: string, args: varargs[string, `$`]) =
+proc notice*(msg: string, args: varargs[string, `$`]) =
   globalLogger.notice(msg, args)
 
 # Info.
 
-proc info(msg: string, args: varargs[string, `$`]) =
+proc info*(msg: string, args: varargs[string, `$`]) =
   globalLogger.info(msg, args)
 
 # Debug.
 
-proc debug(msg: string, args: varargs[string, `$`]) =
+proc debug*(msg: string, args: varargs[string, `$`]) =
   globalLogger.debug(msg, args)
