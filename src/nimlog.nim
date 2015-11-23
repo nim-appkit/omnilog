@@ -241,6 +241,19 @@ proc newRootLogger*(withDefaultWriter: bool = true): Logger =
   if withDefaultWriter:
     result.addWriter("stdout", newFileWriter(file=stdout)) 
 
+###############
+# newEntry(). #
+###############
+
+proc newEntry*(facility: string, severity: Severity, msg: string, customSeverity: string = nil, fields: ValueMap = nil): Entry =
+  Entry(
+    facility: facility,
+    severity: severity,
+    msg: msg,
+    time: times.getLocalTime(times.getTime()),
+    `fields`: fields
+  )
+
 #########################
 # Logger logging procs. #
 #########################
@@ -272,31 +285,18 @@ proc log*(l: Logger, e: Entry) =
 # General severity log.
 
 proc log*(l: Logger, severity: Severity, msg: string, args: varargs[string, `$`]) =
+  var msg = if msg == nil: "" else: msg
   # Log a message with specified severity.
-
-  var e = Entry(
-    facility: l.facility,
-    severity: severity,    
-    time: times.getLocalTime(times.getTime()),
-    msg: msg % args
-  )
-  l.log(e)
+  l.log(newEntry(l.facility, severity, msg % args))
 
 # General custom Severity log.
 
 proc log*(l: Logger, customSeverity: string, msg: string, args: varargs[string, `$`]) =
   # Log a message with a custom severity.
-
+  var msg = if msg == nil: "" else: msg
   if not (l.config.getCustomSeverities().contains(customSeverity)):
-    raise newLogErr("Unknown custom severity: " & customSeverity)
-  var e = Entry(
-    facility: l.facility,
-    severity: Severity.CUSTOM,
-    `customSeverity`: customSeverity,
-    time: times.getLocalTime(times.getTime()),
-    msg: msg % args
-  )
-  l.log(e)
+    raise newLogErr("Unregistered custom severity: " & customSeverity)
+  l.log(newEntry(l.facility, Severity.CUSTOM, msg % args, customSeverity = customSeverity))
 
 # Emergency.
 
@@ -347,30 +347,14 @@ proc debug*(l: Logger, msg: string, args: varargs[string, `$`]) =
 proc withField*[T](l: Logger, name: string, value: T): Entry =
   var m = newValueMap()
   m[name] = value
-  Entry(
-    logger: l,
-    fields: m,
-    time: times.getLocalTime(times.getTime())
-  )
+  newEntry(nil, Severity.UNKNOWN, nil, nil, m)
 
 proc withFields*(l: Logger, fields: tuple): Entry =
-  Entry(
-    logger: l,
-    fields: toValue(fields).getMap(),
-    time: times.getLocalTime(times.getTime())
-  )
-
-
-proc newEntry*(facility: string, severity: Severity, msg: string, fields: ValueMap = nil): Entry =
-  Entry(
-    facility: facility,
-    severity: severity,
-    msg: msg,
-    time: times.getLocalTime(times.getTime()),
-    `fields`: fields
-  )
+  newEntry(nil, Severity.UNKNOWN, nil, nil, toValue(fields).getMap())
 
 proc addField*[T](e: Entry, name: string, value: T): Entry =
+  if e.fields == nil:
+    e.fields = newValueMap()
   e.fields[name] = value
   return e
 
@@ -383,6 +367,8 @@ proc addFields*(e: Entry, t: tuple): Entry =
 
 proc log*(e: Entry, severity: Severity, msg: string, args: varargs[string, `$`]) =
   # Log a message with specified severity.
+
+  var msg = if msg == nil: "" else: msg
   var e = e
   e.severity = severity
   e.msg = msg % args
@@ -392,8 +378,10 @@ proc log*(e: Entry, severity: Severity, msg: string, args: varargs[string, `$`])
 
 proc log*(e: Entry, customSeverity: string, msg: string, args: varargs[string, `$`]) =
   # Log a message with a custom severity.
+
   if not (e.logger.config.getCustomSeverities().contains(customSeverity)):
     raise newLogErr("Unregistered custom severity: " & customSeverity)
+  var msg = if msg == nil: "" else: msg
   var e = e
   e.severity = Severity.CUSTOM
   e.customSeverity = customSeverity
