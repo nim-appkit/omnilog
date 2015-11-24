@@ -1,5 +1,5 @@
 [Package]
-name          = "nimblog"
+name          = "nimlog"
 version       = "0.1.0"
 author        = "Christoph Herzog"
 description   = "Advanced logging library for Nim with structured logging, formatters, filters and writers."
