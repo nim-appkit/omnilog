@@ -2,7 +2,7 @@ from strutils import `%`
 
 import ../nimlog
 
-type ChannelWriter = ref object of Writer
+type ChannelWriter* = ref object of Writer
   maxChannelSize: int
   onChannelFullDiscard: bool
 
