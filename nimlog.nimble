@@ -6,4 +6,4 @@ description   = "Advanced logging library for Nim with structured logging, forma
 license       = "MIT"
 
 [Deps]
-Requires: "nim >= 0.12.0"
+Requires: "nim >= 0.12.0, values >= 0.1"
