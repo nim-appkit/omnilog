@@ -2,8 +2,8 @@
 
 Nimlog is an advanced logging library for the [Nim language](http://nim-lang.org).
 
-It supports plain text and structured logging with
-multiple, pluggable writers which can be seperately filtered and formatted.
+It supports *plain text* and **structured** logging with
+*multiple*, pluggable **writers** which can be **seperately filtered and formatted**.
 
 ## Install
 
@@ -18,6 +18,7 @@ nimble install nimlog
 This is a simple example showing how to use nimlog with the global logger.
 
 By default, a global logger is setup up that will write to stdout with a simple format for debugging.
+
 You can also retrieve a named sub-logger for a *facility*.
 
 ```nim
@@ -50,8 +51,10 @@ appLogger.getLogger("subfacility").warning("Warn")
 
 This section explains how nimlog is structured, and how you can customize it.
 
-You can create an arbitrary amount of nested, named loggers.
-Each logger has a *facility*, which is just a strin name. This usually corresponds to specific parts of your program.
+You can create an arbitrary amount of **nested, named loggers**.
+
+Each logger has a *facility*, which is just a string name. 
+This usually corresponds to specific parts of your program.
 
 Each log message has a **severity**.
 By default, the syslog severities are supported (see additional information).
