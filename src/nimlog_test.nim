@@ -7,3 +7,6 @@ Suite "NimLog":
 
     It "Should log":
       info("test")
+
+    It "Should log with nested logger":
+      getLogger("my.facility").withFields((a: 1, b: "x")).error("Err")

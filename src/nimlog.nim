@@ -182,9 +182,15 @@ proc getLogger*(l: Logger, facility: string): Logger =
   if not facility.startsWith(l.facility):
     facility = l.facility & "." & facility
 
-  var config: Config = l.config.rootConfig 
-  if l.config.rootConfig.configs.hasKey(facility):
-    config = l.config.rootConfig.configs[facility]
+  var rootConfig = l.config.rootConfig
+  # Find the closest parent config.
+  var configFacility = facility
+  while configFacility.contains(".") and not rootConfig.configs.hasKey(configFacility):
+    configFacility = configFacility[0..rfind(configFacility, ".") - 1]
+
+  var config: Config = rootConfig
+  if rootConfig.configs.hasKey(configFacility):
+    config = rootConfig.configs[configFacility]
 
   Logger(facility: facility, `config`: config)
 
@@ -354,10 +360,12 @@ proc debug*(l: Logger, msg: string, args: varargs[string, `$`]) =
 proc withField*[T](l: Logger, name: string, value: T): Entry =
   var m = newValueMap()
   m[name] = value
-  newEntry(nil, Severity.UNKNOWN, nil, nil, m)
+  result = newEntry(nil, Severity.UNKNOWN, nil, nil, m)
+  result.logger = l
 
 proc withFields*(l: Logger, fields: tuple): Entry =
-  newEntry(nil, Severity.UNKNOWN, nil, nil, toValue(fields).getMap())
+  result = newEntry(nil, Severity.UNKNOWN, nil, nil, toValue(fields).getMap())
+  result.logger = l
 
 proc addField*[T](e: Entry, name: string, value: T): Entry =
   if e.fields == nil:
@@ -448,6 +456,9 @@ proc setFormat*(format: string) =
     for f in w.formatters:
       if f is MessageFormatter:
         cast[MessageFormatter](f).setFormat(format)
+
+proc getLogger*(facility: string): Logger =
+  globalLogger.getLogger(facility)
 
 proc setFormat*(format: Format) =
   setFormat($format)
