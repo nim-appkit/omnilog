@@ -1,3 +1,4 @@
+discard """
 import os, threadpool
 from strutils import countLines
 
@@ -6,7 +7,6 @@ import alpha, omega
 import ../nimlog
 import ../formatters/message
 import channel, file, delay
-
 proc threadWrite(w: ptr ChannelWriter) =
   var w = w[]
   w.write(newEntry("facility", Severity.INFO, "msg"))
@@ -72,3 +72,4 @@ Suite "ChannelWriter":
       readFile(path).countLines().should(equal(10)) 
 
 omega.run()
+"""
