@@ -82,6 +82,9 @@ method format(f: Formatter, e: ref Entry) {.base.} =
 # Writer. #
 ###########
 
+method close*(w: Writer, force: bool = false, wait: bool = true) {.base.} =
+  assert false, "Writer does not implement .close()"
+
 method shouldWrite*(w: Writer, e: Entry): bool {.base.} =
   if e.severity > w.minSeverity:
     return false
@@ -108,12 +111,16 @@ proc addFilter*(w: Writer, filter: proc(e: Entry): bool) =
     w.filters = @[]
   w.filters.add(filter)
 
+proc clearFilters*(w: Writer) =
+  w.filters = nil
+
 proc addFormatter*(w: Writer, formatter: Formatter) =
   if w.formatters == nil:
     w.formatters = @[]
   w.formatters.add(formatter)
 
-
+proc clearFormatters*(w: Writer) =
+  w.formatters = nil
 
 ###############################
 # Formatter / Writer imports. #

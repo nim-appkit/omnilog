@@ -12,6 +12,10 @@ method doWrite*(w: MemoryWriter, e: Entry) =
 
 proc getEntries*(w: MemoryWriter): seq[Entry] = w.entries
 
+method close*(w: MemoryWriter, force: bool = false, wait: bool = true) =
+  # No-op.
+  discard
+
 proc newMemoryWriter*(minSeverity: Severity = Severity.CUSTOM, maxEntries: int = 10000): MemoryWriter =
   MemoryWriter(
     entries: @[],

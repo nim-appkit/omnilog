@@ -18,6 +18,7 @@ type
     separator: string
     connectionRetryInterval: float
     waitFor: int
+    maxBufferSize: int
 
     socket: net.Socket
     lastConnectTry: float
@@ -74,6 +75,9 @@ method sendAll(w: SocketWriter) =
   w.buffer = @[]
 
 method doWrite*(w: SocketWriter, e: Entry) =
+  if w.buffer.len() >= w.maxBufferSize:
+    return
+
   w.buffer.add(e)
   if w.flushAfter > 1 and w.buffer.len() < w.flushAfter:
     # Buffer the log msg and send it later.
@@ -81,10 +85,11 @@ method doWrite*(w: SocketWriter, e: Entry) =
   else:
     w.sendAll()
 
-proc close*(w: SocketWriter) =
-  # Try to write all buffered messages.
-  w.flushAfter = 1 
-  w.sendAll()
+proc close*(w: SocketWriter, force: bool = false, wait: bool = true) =
+  if not force:
+    # Try to write all buffered messages.
+    w.flushAfter = 1 
+    w.sendAll()
   w.socket.close()
 
 proc newSocketWriter*(
@@ -96,7 +101,8 @@ proc newSocketWriter*(
   mustWrite: bool = true,
   flushAfter: int = 1,
   connectionRetryInterval: float = 60,
-  waitFor: int = 100
+  waitFor: int = 100,
+  maxBufferSize: int = 1000
 ): SocketWriter =
   result = SocketWriter(
     `minSeverity`: minSeverity,
@@ -108,6 +114,7 @@ proc newSocketWriter*(
     `flushAfter`: flushAfter,
     `connectionRetryInterval`: connectionRetryInterval,
     `waitFor`: waitFor,
+    `maxBufferSize`: maxBufferSize,
     buffer: @[]
   )
 

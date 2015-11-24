@@ -36,6 +36,10 @@ method doWrite*(w: FileWriter, e: Entry) =
     w.file.flushFile()
     w.writeCounter = 0
 
+method close*(w: FileWriter, force: bool = false, wait: bool = true) =
+  if not (w.file == stdout or w.file == stderr):
+    w.file.close()
+
 proc newFileWriter*(
   file: File = nil,
   path: string = nil, 
