@@ -5,6 +5,8 @@ Nimlog is an advanced logging library for the [Nim language](http://nim-lang.org
 It supports *plain text* and **structured** logging with
 *multiple*, pluggable **writers** which can be **seperately filtered and formatted**.
 
+**Documentation is still lacking a lot of info. Will improve soon.**
+
 ## Install
 
 Nimlog is best installed with [Nimble](https://github.com/nim-lang/nimble), Nims package manager.
