@@ -5,6 +5,8 @@ Suite "NimLog":
 
   Describe "Global logger":
 
+    # TODO: proper tests!!
+
     It "Should log":
       info("test")
 

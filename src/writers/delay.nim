@@ -1,3 +1,13 @@
+#
+#
+#         Nimlog logging library.
+# 
+# (c) Christoph Herzog <chris@theduke.at> 2015
+# 
+# This project is under the LGPL license.
+# For details, see LICENSE.txt.
+# 
+
 import os
 
 import ../nimlog
