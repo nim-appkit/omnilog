@@ -1,9 +1,9 @@
 [Package]
-name          = "nimlog"
+name          = "omnilog"
 version       = "0.1.0"
 author        = "Christoph Herzog"
 description   = "Advanced logging library for Nim with structured logging, formatters, filters and writers."
-license       = "MIT"
+license       = "LGPL"
 
 srcDir        = "src"
 

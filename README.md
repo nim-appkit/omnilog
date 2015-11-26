@@ -1,6 +1,6 @@
-# nimlog
+# omnilog
 
-Nimlog is an advanced logging library for the [Nim language](http://nim-lang.org).
+Omnilog is an advanced logging library for the [Nim language](http://nim-lang.org).
 
 It supports *plain text* and **structured** logging with
 *multiple*, pluggable **writers** which can be **seperately filtered and formatted**.
@@ -9,22 +9,22 @@ It supports *plain text* and **structured** logging with
 
 ## Install
 
-Nimlog is best installed with [Nimble](https://github.com/nim-lang/nimble), Nims package manager.
+Omnilog is best installed with [Nimble](https://github.com/nim-lang/nimble), Nims package manager.
 
 ```bash
-nimble install nimlog
+nimble install omnilog
 ```
 
 ## Getting started
 
-This is a simple example showing how to use nimlog with the global logger.
+This is a simple example showing how to use omnilog with the global logger.
 
 By default, a global logger is setup up that will write to stdout with a simple format for debugging.
 
 You can also retrieve a named sub-logger for a *facility*.
 
 ```nim
-import nimlog
+import omnilog
 
 # Plain log message.
 info("Msg")
@@ -51,7 +51,7 @@ appLogger.getLogger("subfacility").warning("Warn")
 
 ## Concepts
 
-This section explains how nimlog is structured, and how you can customize it.
+This section explains how omnilog is structured, and how you can customize it.
 
 You can create an arbitrary amount of **nested, named loggers**.
 
@@ -97,7 +97,7 @@ Entry* = object
 
 ### Log levels
 
-By default, nimlog supports the log severities specified in the syslog RFC [syslog](http://tools.ietf.org/html/rfc5424).
+By default, omnilog supports the log severities specified in the syslog RFC [syslog](http://tools.ietf.org/html/rfc5424).
 You can also configure *custom levels*.
 
 | Severity  | Numerical value |
