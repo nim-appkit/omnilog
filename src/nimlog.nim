@@ -38,6 +38,7 @@ type
     NOTICE
     INFO
     DEBUG
+    TRACE
     CUSTOM
 
   Entry* = object
@@ -133,8 +134,8 @@ proc clearFormatters*(w: Writer) =
 # Formatter / Writer imports. #
 ###############################
 
-import formatters/defaultfields, formatters/message
-import writers/file
+import nimlog/formatters/defaultfields, nimlog/formatters/message
+import nimlog/writers/file
 
 
 
@@ -217,6 +218,7 @@ proc addWriter*(l: Logger, name: string, w: Writer) =
 proc clearWriters*(l: Logger) =
   if l.config.facility != l.facility:
     l.config = l.config.buildChild(l.facility)
+    l.config.hasWriters = true
   l.config.writers = initTable[string, Writer]()
 
 proc getWriter*(l: Logger, name: string): Writer =
@@ -226,6 +228,12 @@ proc getWriter*(l: Logger, name: string): Writer =
   if not conf.writers.hasKey(name):
     raise newLogErr("Unknown writer: '" & name & "'")
   conf.writers[name]
+
+proc getWriters*(l: Logger): seq[Writer] =
+  var conf = l.config
+  while not conf.hasWriters:
+    conf = conf.parent
+  return sequtils.toSeq(conf.writers.values)
 
 proc addFormatter*(l: Logger, f: Formatter) =
   if l.config.facility != l.facility:
@@ -358,7 +366,8 @@ proc info*(l: Logger, msg: string, args: varargs[string, `$`]) =
 proc debug*(l: Logger, msg: string, args: varargs[string, `$`]) =
   l.log(Severity.DEBUG, msg, args)
 
-
+proc trace*(l: Logger, msg: string, args: varargs[string, `$`]) =
+  l.log(Severity.TRACE, msg, args)
 
 ######################
 # Entry field logic. #
@@ -450,7 +459,10 @@ proc info*(e: Entry, msg: string, args: varargs[string, `$`]) =
 proc debug*(e: Entry, msg: string, args: varargs[string, `$`]) =
   e.log(Severity.DEBUG, msg, args)
 
+# Trace.
 
+proc trace*(e: Entry, msg: string, args: varargs[string, `$`]) =
+  e.log(Severity.TRACE, msg, args)
 
 ##################
 # Global logger. #
@@ -523,3 +535,8 @@ proc info*(msg: string, args: varargs[string, `$`]) =
 
 proc debug*(msg: string, args: varargs[string, `$`]) =
   globalLogger.debug(msg, args)
+
+# Trace.
+
+proc trace*(msg: string, args: varargs[string, `$`]) =
+  globalLogger.trace(msg, args)

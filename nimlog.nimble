@@ -5,5 +5,7 @@ author        = "Christoph Herzog"
 description   = "Advanced logging library for Nim with structured logging, formatters, filters and writers."
 license       = "MIT"
 
+srcDir        = "src"
+
 [Deps]
 Requires: "nim >= 0.12.0, values >= 0.1"
