@@ -102,15 +102,16 @@ You can also configure *custom levels*.
 
 | Severity  | Numerical value |
 | --------- | --------------- |
-| emergency | 1 |
-| alert     | 2 |
-| critical  | 3 |
-| error     | 4 |
-| warning   | 5 |
-| notice    | 6 |
-| info      | 7 |
-| debug     | 8 |
-| custom    | 9 |
+| emergency | 1  |
+| alert     | 2  |
+| critical  | 3  |
+| error     | 4  |
+| warning   | 5  |
+| notice    | 6  |
+| info      | 7  |
+| debug     | 8  |
+| trace     | 9  |
+| custom    | 10 |
 
 
 ### Time format

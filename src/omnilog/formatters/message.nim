@@ -46,7 +46,7 @@ method format(f: MessageFormatter, e: ref Entry) =
   if msg.contains("$time3339"):
     msg = msg.replace("$time3339", e[].time.format("yyyy-dd-MM'T'HH:mmzzz"))
   if msg.contains("$time"):
-    msg = msg.replace("$time", e[].time.format("HH:mm"))
+    msg = msg.replace("$time", e[].time.format("HH:mm:ss"))
 
   if e[].fields == nil:
     msg = msg.replace("$fields", "").replace("$prettyFields", "")

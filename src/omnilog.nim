@@ -10,7 +10,7 @@
 ###############################################################################
 
 
-from strutils import split, contains, startsWith, rfind, `%`
+from strutils import split, contains, startsWith, rfind, format
 from sequtils import nil
 from times import nil
 import tables
@@ -316,7 +316,7 @@ proc log*(l: Logger, e: Entry) =
 proc log*(l: Logger, severity: Severity, msg: string, args: varargs[string, `$`]) =
   var msg = if msg == nil: "" else: msg
   # Log a message with specified severity.
-  l.log(newEntry(l.facility, severity, msg % args))
+  l.log(newEntry(l.facility, severity, msg.format(args)))
 
 # General custom Severity log.
 
@@ -325,7 +325,7 @@ proc log*(l: Logger, customSeverity: string, msg: string, args: varargs[string, 
   var msg = if msg == nil: "" else: msg
   if not (l.config.getCustomSeverities().contains(customSeverity)):
     raise newLogErr("Unregistered custom severity: " & customSeverity)
-  l.log(newEntry(l.facility, Severity.CUSTOM, msg % args, customSeverity = customSeverity))
+  l.log(newEntry(l.facility, Severity.CUSTOM, msg.format(args), customSeverity = customSeverity))
 
 # Emergency.
 
@@ -403,7 +403,7 @@ proc log*(e: Entry, severity: Severity, msg: string, args: varargs[string, `$`])
   var msg = if msg == nil: "" else: msg
   var e = e
   e.severity = severity
-  e.msg = msg % args
+  e.msg = msg.format(args)
   e.logger.log(e)
 
 # General custom Severity log.
@@ -417,7 +417,7 @@ proc log*(e: Entry, customSeverity: string, msg: string, args: varargs[string, `
   var e = e
   e.severity = Severity.CUSTOM
   e.customSeverity = customSeverity
-  e.msg = msg % args
+  e.msg = msg.format(args)
   e.logger.log(e)
 
 # Emergency.
