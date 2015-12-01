@@ -9,18 +9,18 @@
 ##                                                                           ##
 ###############################################################################
 
-from ../../omnilog import Entry, Writer, Severity, newLogErr, Formatter
+from ../../omnilog import Entry, Handler, Severity, newLogErr, Formatter
 
 from strutils import `%`
 
-type NilWriter* = ref object of Writer
+type NilHandler* = ref object of Handler
   discard
 
-method doWrite*(w: NilWriter, e: Entry) =
+method doWrite*(w: NilHandler, e: Entry) =
   discard
 
-method close*(w: NilWriter, force, wait: bool = false) =
+method close*(w: NilHandler, force, wait: bool = false) =
   discard
 
-proc newNilWriter*(minSeverity: Severity = Severity.CUSTOM): NilWriter =
-  NilWriter(`minSeverity`: minSeverity)
+proc newNilHandler*(minSeverity: Severity = Severity.CUSTOM): NilHandler =
+  NilHandler(`minSeverity`: minSeverity)

@@ -16,12 +16,12 @@ import ../../omnilog
 from ../formatters/message import Format
 import file
 
-Suite "FileWriter":
-  Describe "FileWriter":
+Suite "FileHandler":
+  Describe "FileHandler":
 
     It "Should write single file":
       var path = os.joinPath(os.getTempDir(), "omnilog_file_test.log")
-      var w = newFileWriter(path=path, format=Format.SHORT.`$`, append=false)
+      var w = newFileHandler(path=path, format=Format.SHORT.`$`, append=false)
 
       w.write(newEntry("", Severity.INFO, "msg"))
       path.should(beAFile())
@@ -29,7 +29,7 @@ Suite "FileWriter":
 
     It "Should write multiple files":
       var path = os.joinPath(os.getTempDir(), "omnilog_file_test.log")
-      var w = newFileWriter(path=path, format=Format.SHORT.`$`, append=false)
+      var w = newFileHandler(path=path, format=Format.SHORT.`$`, append=false)
 
       w.write(newEntry("", Severity.INFO, "info"))
       w.write(newEntry("", Severity.ERROR, "err"))

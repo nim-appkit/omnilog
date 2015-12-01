@@ -7,20 +7,20 @@ import alpha, omega
 import ../omnilog
 import ../formatters/message
 import channel, file, delay
-proc threadWrite(w: ptr ChannelWriter) =
+proc threadWrite(w: ptr ChannelHandler) =
   var w = w[]
   w.write(newEntry("facility", Severity.INFO, "msg"))
 
-Suite "ChannelWriter":
+Suite "ChannelHandler":
 
-  Describe("ChannelWriter"):
+  Describe("ChannelHandler"):
 
     It "Should work":
       var path = os.joinPath(os.getTempDir(), "omnilog_channel_test.log")
-      var fileW = newFileWriter(path=path, append=false)
+      var fileW = newFileHandler(path=path, append=false)
       fileW.clearFormatters()
       fileW.addFormatter(newMessageFormatter(format=Format.SHORT))
-      var w = newChannelWriter(fileW)
+      var w = newChannelHandler(fileW)
       w.run()
 
 
@@ -32,13 +32,13 @@ Suite "ChannelWriter":
 
     It "Should wait until all writes have finished":
       var path = os.joinPath(os.getTempDir(), "omnilog_channel_test.log")
-      var fileW = newFileWriter(path=path, append=false)
+      var fileW = newFileHandler(path=path, append=false)
       fileW.clearFormatters()
       fileW.addFormatter(newMessageFormatter(format=Format.SHORT))
 
-      var delayW = newDelayWriter(filew)
+      var delayW = newDelayHandler(filew)
       
-      var w = newChannelWriter(delayW)
+      var w = newChannelHandler(delayW)
       w.run()
 
       for i in 1..10:
@@ -50,18 +50,18 @@ Suite "ChannelWriter":
 
     It "Should be thread-safe":
       var path = os.joinPath(os.getTempDir(), "omnilog_channel_test.log")
-      var fileW = newFileWriter(path=path, append=false)
+      var fileW = newFileHandler(path=path, append=false)
       fileW.clearFormatters()
       fileW.addFormatter(newMessageFormatter(format=Format.SHORT))
 
-      var delayW = newDelayWriter(filew, 200)
+      var delayW = newDelayHandler(filew, 200)
        
-      var w = newChannelWriter(delayW)
+      var w = newChannelHandler(delayW)
       w.run()
 
-      var wRef: ptr ChannelWriter = addr w
+      var wRef: ptr ChannelHandler = addr w
 
-      var threads = newSeq[Thread[ptr ChannelWriter]](15)
+      var threads = newSeq[Thread[ptr ChannelHandler]](15)
       for i in 1..10:
         createThread(threads[i], threadWrite, wRef)
 

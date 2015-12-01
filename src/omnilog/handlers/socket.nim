@@ -20,7 +20,7 @@ type
   Protocol {.pure.} = enum
     TCP, UDP
 
-  SocketWriter = ref object of Writer
+  SocketHandler = ref object of Handler
     host: string
     port: uint16
     protocol: Protocol
@@ -35,7 +35,7 @@ type
     lastConnectTry: float
     buffer: seq[Entry]
 
-method sendAll(w: SocketWriter) =
+method sendAll(w: SocketHandler) =
   if w.socket == nil:
     if w.lastConnectTry > 0 and times.epochTime() - w.lastConnectTry < w.connectionRetryInterval:
       # We have not reached the retry interval yet, so ignore this log message.
@@ -51,7 +51,7 @@ method sendAll(w: SocketWriter) =
     except:
       w.socket.close()
       if w.mustWrite:
-        var msg = "SocketWriter: Could not connect to $1.$2 for logging: " & getCurrentExceptionMsg() % [w.host, w.port.`$`]
+        var msg = "SocketHandler: Could not connect to $1.$2 for logging: " & getCurrentExceptionMsg() % [w.host, w.port.`$`]
         raise newLogErr(msg)
       else:
         # Enable reconnect tries.
@@ -80,12 +80,12 @@ method sendAll(w: SocketWriter) =
     # Enable retries by setting socket to nil.
     w.socket = nil
     if w.mustWrite:
-      var msg = "SocketWriter: Could not send socket data to $1.$2: $3" % [w.host, w.port.`$`, getCurrentExceptionMsg()]
+      var msg = "SocketHandler: Could not send socket data to $1.$2: $3" % [w.host, w.port.`$`, getCurrentExceptionMsg()]
       raise newLogErr(msg)
 
   w.buffer = @[]
 
-method doWrite*(w: SocketWriter, e: Entry) =
+method doWrite*(w: SocketHandler, e: Entry) =
   if w.buffer.len() >= w.maxBufferSize:
     return
 
@@ -96,14 +96,14 @@ method doWrite*(w: SocketWriter, e: Entry) =
   else:
     w.sendAll()
 
-proc close*(w: SocketWriter, force: bool = false, wait: bool = true) =
+proc close*(w: SocketHandler, force: bool = false, wait: bool = true) =
   if not force:
     # Try to write all buffered messages.
     w.flushAfter = 1 
     w.sendAll()
   w.socket.close()
 
-proc newSocketWriter*(
+proc newSocketHandler*(
   host: string, 
   port: uint16, 
   minSeverity: Severity = Severity.CUSTOM,  
@@ -114,8 +114,8 @@ proc newSocketWriter*(
   connectionRetryInterval: float = 60,
   waitFor: int = 100,
   maxBufferSize: int = 1000
-): SocketWriter =
-  result = SocketWriter(
+): SocketHandler =
+  result = SocketHandler(
     `minSeverity`: minSeverity,
     `host`: host,
     `port`: port,

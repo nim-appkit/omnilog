@@ -15,7 +15,7 @@ from sequtils import nil
 from times import nil
 import tables
 
-from values import ValueMap, newValueMap, `[]=`, `.=`, toValue, getMap
+from values import Map, newValueMap, `[]=`, `.=`, toValue
 
 
 ###########
@@ -50,12 +50,12 @@ type
     customSeverity*: string
     time*: times.TimeInfo
     msg*: string
-    fields*: ValueMap
+    fields*: Map
 
   Formatter* = ref object of RootObj
     discard
 
-  Writer* = ref object of RootObj
+  Handler* = ref object of RootObj
     minSeverity*: Severity
     filters*: seq[proc(e: Entry): bool]
     formatters*: seq[Formatter]
@@ -67,8 +67,8 @@ type
     rootConfig: RootConfig
     parent: Config
 
-    hasWriters: bool
-    writers: Table[string, Writer]
+    hasHandlers: bool
+    handlers: Table[string, Handler]
 
     formatters: seq[Formatter]
 
@@ -88,13 +88,13 @@ method format(f: Formatter, e: ref Entry) {.base.} =
   assert false, "Formatter does not implement .format()"
 
 ###########
-# Writer. #
+# Handler. #
 ###########
 
-method close*(w: Writer, force: bool = false, wait: bool = true) {.base.} =
-  assert false, "Writer does not implement .close()"
+method close*(w: Handler, force: bool = false, wait: bool = true) {.base.} =
+  assert false, "Handler does not implement .close()"
 
-method shouldWrite*(w: Writer, e: Entry): bool {.base.} =
+method shouldWrite*(w: Handler, e: Entry): bool {.base.} =
   if e.severity > w.minSeverity:
     return false
   for f in w.filters:
@@ -102,10 +102,10 @@ method shouldWrite*(w: Writer, e: Entry): bool {.base.} =
       return false 
   return true
 
-method doWrite*(w: Writer, e: Entry) {.base.} =
-  assert false, "Writer does not implement .doWrite()"
+method doWrite*(w: Handler, e: Entry) {.base.} =
+  assert false, "Handler does not implement .doWrite()"
 
-method write*(w: Writer, e: Entry) {.base.} =
+method write*(w: Handler, e: Entry) {.base.} =
   if not w.shouldWrite(e):
     return
   var eRef: ref Entry
@@ -115,28 +115,28 @@ method write*(w: Writer, e: Entry) {.base.} =
     f.format(eRef)
   w.doWrite(eRef[])
 
-proc addFilter*(w: Writer, filter: proc(e: Entry): bool) =
+proc addFilter*(w: Handler, filter: proc(e: Entry): bool) =
   if w.filters == nil:
     w.filters = @[]
   w.filters.add(filter)
 
-proc clearFilters*(w: Writer) =
+proc clearFilters*(w: Handler) =
   w.filters = nil
 
-proc addFormatter*(w: Writer, formatter: Formatter) =
+proc addFormatter*(w: Handler, formatter: Formatter) =
   if w.formatters == nil:
     w.formatters = @[]
   w.formatters.add(formatter)
 
-proc clearFormatters*(w: Writer) =
+proc clearFormatters*(w: Handler) =
   w.formatters = nil
 
 ###############################
-# Formatter / Writer imports. #
+# Formatter / Handler imports. #
 ###############################
 
 import omnilog/formatters/defaultfields, omnilog/formatters/message
-import omnilog/writers/file
+import omnilog/handlers/file
 
 
 
@@ -148,8 +148,8 @@ proc newRootConfig(): RootConfig =
   result = RootConfig(
     facility: "",
     minSeverity: Severity.CUSTOM,
-    hasWriters: true,
-    writers: initTable[string, Writer](),
+    hasHandlers: true,
+    handlers: initTable[string, Handler](),
     formatters: @[],
     customSeverities: @[],
     configs: initTable[string, Config]()
@@ -168,11 +168,11 @@ proc buildChild(c: Config, facility: string): Config =
     parent: c,
   )
 
-proc getWriters(c: Config): seq[Writer] =
-  if c.hasWriters:
-    result = sequtils.toSeq(c.writers.values)
+proc getHandlers(c: Config): seq[Handler] =
+  if c.hasHandlers:
+    result = sequtils.toSeq(c.handlers.values)
   else:
-    result = c.parent.getWriters()
+    result = c.parent.getHandlers()
 
 proc getFormatters(c: Config): seq[Formatter] =
   if c.formatters != nil: c.formatters else: c.parent.getFormatters()
@@ -203,38 +203,41 @@ proc getLogger*(l: Logger, facility: string): Logger =
 
   Logger(facility: facility, `config`: config)
 
+proc setFacility*(l: Logger, facility: string) =
+  l.facility = facility
+
 proc setSeverity*(l: Logger, s: Severity) =
   if l.config.facility != l.facility:
     l.config = l.config.buildChild(l.facility)
   l.config.minSeverity = s
 
-proc addWriter*(l: Logger, name: string, w: Writer) =
+proc addHandler*(l: Logger, name: string, w: Handler) =
   if l.config.facility != l.facility:
     l.config = l.config.buildChild(l.facility)
-  if not l.config.hasWriters:
-    l.config.writers = l.config.parent.writers
-    l.config.hasWriters = true
-  l.config.writers[name] = w
+  if not l.config.hasHandlers:
+    l.config.handlers = l.config.parent.handlers
+    l.config.hasHandlers = true
+  l.config.handlers[name] = w
 
-proc clearWriters*(l: Logger) =
+proc clearHandlers*(l: Logger) =
   if l.config.facility != l.facility:
     l.config = l.config.buildChild(l.facility)
-    l.config.hasWriters = true
-  l.config.writers = initTable[string, Writer]()
+    l.config.hasHandlers = true
+  l.config.handlers = initTable[string, Handler]()
 
-proc getWriter*(l: Logger, name: string): Writer =
+proc getHandler*(l: Logger, name: string): Handler =
   var conf = l.config
-  while not conf.hasWriters:
+  while not conf.hasHandlers:
     conf = conf.parent
-  if not conf.writers.hasKey(name):
-    raise newLogErr("Unknown writer: '" & name & "'")
-  conf.writers[name]
+  if not conf.handlers.hasKey(name):
+    raise newLogErr("Unknown handler: '" & name & "'")
+  conf.handlers[name]
 
-proc getWriters*(l: Logger): seq[Writer] =
+proc getHandlers*(l: Logger): seq[Handler] =
   var conf = l.config
-  while not conf.hasWriters:
+  while not conf.hasHandlers:
     conf = conf.parent
-  return sequtils.toSeq(conf.writers.values)
+  return sequtils.toSeq(conf.handlers.values)
 
 proc addFormatter*(l: Logger, f: Formatter) =
   if l.config.facility != l.facility:
@@ -261,20 +264,20 @@ proc getFormatters*(l: Logger): seq[Formatter] =
 proc registerSeverity*(l: Logger, severity: string) =
   l.config.rootConfig.customSeverities.add(severity)
 
-proc newRootLogger*(withDefaultWriter: bool = true): Logger =
+proc newRootLogger*(withDefaultHandler: bool = true): Logger =
   result = Logger(
     facility: "",
     config: newRootConfig()
   )
 
-  if withDefaultWriter:
-    result.addWriter("stdout", newFileWriter(file=stdout)) 
+  if withDefaultHandler:
+    result.addHandler("stdout", newFileHandler(file=stdout)) 
 
 ###############
 # newEntry(). #
 ###############
 
-proc newEntry*(facility: string, severity: Severity, msg: string, customSeverity: string = nil, fields: ValueMap = nil): Entry =
+proc newEntry*(facility: string, severity: Severity, msg: string, customSeverity: string = nil, fields: Map = nil): Entry =
   Entry(
     facility: facility,
     severity: severity,
@@ -308,7 +311,7 @@ proc log*(l: Logger, e: Entry) =
 
   for f in l.config.getFormatters:
     f.format(eRef)
-  for w in l.config.getWriters:
+  for w in l.config.getHandlers:
     w.write(eRef[])
 
 # General severity log.
@@ -381,7 +384,7 @@ proc withField*[T](l: Logger, name: string, value: T): Entry =
   result.logger = l
 
 proc withFields*(l: Logger, fields: tuple): Entry =
-  result = newEntry(nil, Severity.UNKNOWN, nil, nil, toValue(fields).getMap())
+  result = newEntry(nil, Severity.UNKNOWN, nil, nil, toValue(fields))
   result.logger = l
 
 proc addField*[T](e: Entry, name: string, value: T): Entry =
@@ -472,7 +475,7 @@ proc trace*(e: Entry, msg: string, args: varargs[string, `$`]) =
 var globalLogger = newRootLogger()
 
 proc setFormat*(format: string) =
-  for w in globalLogger.config.getWriters():
+  for w in globalLogger.config.getHandlers():
     for f in w.formatters:
       if f is MessageFormatter:
         cast[MessageFormatter](f).setFormat(format)

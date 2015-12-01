@@ -51,13 +51,13 @@ proc clearMessages*(s: StubServer) =
 proc close*(s: StubServer) =
   s.socket.close()
 
-Suite "SocketWriter":
+Suite "SocketHandler":
 
-  Describe "SocketWriter":
+  Describe "SocketHandler":
 
     It "Should send messages":
       var server = newStubServer()
-      var w = newSocketWriter("localhost", 9991)
+      var w = newSocketHandler("localhost", 9991)
       w.write(newEntry("facility", Severity.INFO, "msg"))
       w.close()
 

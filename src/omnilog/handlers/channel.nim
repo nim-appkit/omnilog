@@ -14,13 +14,13 @@ from strutils import `%`
 
 import ../../omnilog
 
-type ChannelWriter* = ref object of Writer
+type ChannelHandler* = ref object of Handler
   maxChannelSize: int
   onChannelFullDiscard: bool
 
-  writer*: Writer
+  handler*: Handler
 
-  thread: Thread[ptr ChannelWriter]
+  thread: Thread[ptr ChannelHandler]
   channel: Channel[Entry]
 
   shouldClose: bool
@@ -28,7 +28,7 @@ type ChannelWriter* = ref object of Writer
   isClosed: bool
 
 
-proc process(wRef: ptr ChannelWriter) =
+proc process(wRef: ptr ChannelHandler) =
   var w = wRef[]
   while true:
     var waiting = w.channel.peek()
@@ -44,43 +44,43 @@ proc process(wRef: ptr ChannelWriter) =
     if w.maxChannelSize > 0:
       if waiting > w.maxChannelSize:
         if not w.onChannelFullDiscard:
-          raise newLogErr("ChannelWriter channel is full: $1 items queued" % [$waiting])
+          raise newLogErr("ChannelHandler channel is full: $1 items queued" % [$waiting])
         else:
           # Throw away entries.
           for i in 0..(waiting - w.maxChannelSize):
             discard w.channel.recv()
 
     var entry = w.channel.recv()
-    w.writer.write(entry)
+    w.handler.write(entry)
 
-proc run*(w: var ChannelWriter) =
+proc run*(w: var ChannelHandler) =
   w.channel.open()
-  var wRef: ptr ChannelWriter = addr(w)
+  var wRef: ptr ChannelHandler = addr(w)
   createThread(w.thread, process, wRef)
 
-method doWrite*(w: ChannelWriter, e: Entry) =
+method doWrite*(w: ChannelHandler, e: Entry) =
   w.channel.send(e)
 
-method close*(w: ChannelWriter, force: bool = false, wait: bool = true) =
+method close*(w: ChannelHandler, force: bool = false, wait: bool = true) =
   w.shouldClose = true
   w.forceClose = force
 
   if wait:
-    # Wait until writer is properly closed down.
+    # Wait until handler is properly closed down.
     while true:
       if w.isClosed:
         break
-  w.writer.close(force, wait)
+  w.handler.close(force, wait)
   w.channel.close()
 
-proc newChannelWriter*(
-  writer: Writer, 
+proc newChannelHandler*(
+  handler: Handler, 
   minSeverity: Severity = Severity.CUSTOM, 
   maxChannelSize: int = 5000, 
   onChannelFullDiscard: bool = true
-): ChannelWriter =
-  ChannelWriter(
-    `writer`: writer,
+): ChannelHandler =
+  ChannelHandler(
+    `handler`: handler,
     `minSeverity`: minSeverity,
     `maxChannelSize`: maxChannelSize,
     `onChannelFullDiscard`: onChannelFullDiscard,

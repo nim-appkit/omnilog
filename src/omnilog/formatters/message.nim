@@ -11,7 +11,7 @@
 
 from ../../omnilog import Formatter, Entry
 
-from values import pairs, `$`, len
+import values
 from strutils import contains, `%`, replace, endsWith
 from times import timeInfoToTime, getLocalTime, format
 
@@ -53,14 +53,14 @@ method format(f: MessageFormatter, e: ref Entry) =
   else:
     if msg.contains("$fields"):
       var fields = " "
-      for key, val in e[].fields:
+      for key, val in e[].fields.fieldPairs:
         fields &= key & "=" & $val & " "
       msg = msg.replace("$fields", fields)
     if msg.contains("$prettyFields"):
       var fields = ""
       if e[].fields.len() > 0:
         fields &= "\n"
-        for key, val in e[].fields:
+        for key, val in e[].fields.fieldPairs:
           fields &= "  " & key & " => " & repr(val)
       msg = msg.replace("$prettyFields", fields)
 

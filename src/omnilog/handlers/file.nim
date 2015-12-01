@@ -9,12 +9,12 @@
 ##                                                                           ##
 ###############################################################################
 
-from ../../omnilog import Entry, Writer, Severity, newLogErr, Formatter
+from ../../omnilog import Entry, Handler, Severity, newLogErr, Formatter
 from ../formatters/message import newMessageFormatter, Format
 
 from strutils import `%`
 
-type FileWriter = ref object of Writer
+type FileHandler = ref object of Handler
   filePath*: string
   append*: bool
   mustWrite*: bool
@@ -23,7 +23,7 @@ type FileWriter = ref object of Writer
   file: File
   writeCounter: int
 
-method doWrite*(w: FileWriter, e: Entry) =
+method doWrite*(w: FileHandler, e: Entry) =
   if w.file == nil:
     var mode = if w.append: fmAppend else: fmWrite
     if not w.file.open(w.filePath, mode):
@@ -47,11 +47,11 @@ method doWrite*(w: FileWriter, e: Entry) =
     w.file.flushFile()
     w.writeCounter = 0
 
-method close*(w: FileWriter, force: bool = false, wait: bool = true) =
+method close*(w: FileHandler, force: bool = false, wait: bool = true) =
   if not (w.file == stdout or w.file == stderr):
     w.file.close()
 
-proc newFileWriter*(
+proc newFileHandler*(
   file: File = nil,
   path: string = nil, 
   minSeverity: Severity = Severity.CUSTOM, 
@@ -59,7 +59,7 @@ proc newFileWriter*(
   flushAfter: int = 1, 
   format: string = nil,
   formatter: Formatter = nil
-): FileWriter =
+): FileHandler =
   
   var formatter = formatter
   if formatter == nil:
@@ -71,7 +71,7 @@ proc newFileWriter*(
   if file == nil and (path == nil or path == ""):
     raise newLogErr("Must specify either file or filePath")
 
-  FileWriter(
+  FileHandler(
     `file`: file,
     filePath: path,
     `minSeverity`: minSeverity,

@@ -13,23 +13,23 @@ import os
 
 import ../../omnilog
 
-type DelayWriter = ref object of Writer
-  # DelayWriter is only used for testing thread safety.
+type DelayHandler = ref object of Handler
+  # DelayHandler is only used for testing thread safety.
   # It delays each write by delay ms.
 
   delay: int
-  writer: Writer
+  handler: Handler
 
-method doWrite*(w: DelayWriter, e: Entry) =
+method doWrite*(w: DelayHandler, e: Entry) =
   os.sleep(w.delay)
-  w.writer.write(e)
+  w.handler.write(e)
 
-method close*(w: DelayWriter, force: bool = false, wait: bool = true) =
-  w.writer.close(force, wait)
+method close*(w: DelayHandler, force: bool = false, wait: bool = true) =
+  w.handler.close(force, wait)
 
-proc newDelayWriter*(writer: Writer, delay: int = 100): DelayWriter =
-  DelayWriter(
-    `writer`: writer,
+proc newDelayHandler*(handler: Handler, delay: int = 100): DelayHandler =
+  DelayHandler(
+    `handler`: handler,
     `delay`: delay,
     minSeverity: Severity.CUSTOM
   )

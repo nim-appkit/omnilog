@@ -15,11 +15,11 @@ import times
 import ../../omnilog
 import memory
 
-Suite "MemoryWriter":
-  Describe "MemoryWriter":
+Suite "MemoryHandler":
+  Describe "MemoryHandler":
 
     It "Should log":
-      var w = newMemoryWriter()
+      var w = newMemoryHandler()
       var e = Entry(
         facility: "test",
         severity: Severity.INFO,
@@ -34,7 +34,7 @@ Suite "MemoryWriter":
       #entries[0].should(equal(e))
 
     It "Should roll over when maxEntries are reached":
-      var w = newMemoryWriter(maxEntries = 20)
+      var w = newMemoryHandler(maxEntries = 20)
       for i in 0..19:
         var e = Entry(
           facility: "test",
