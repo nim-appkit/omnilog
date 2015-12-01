@@ -28,10 +28,18 @@ Suite "MemoryHandler":
       )
       w.write(e)
 
+      e = Entry(
+        facility: "test",
+        severity: Severity.INFO,
+        msg: "hallo 2",
+        time: getTime().getLocalTime()
+      )
+      w.write(e)
+
       var entries = w.getEntries()
-      entries.len().should(equal(1))
+      entries.len().should(equal(2))
       entries[0].msg.should(equal("hallo"))
-      #entries[0].should(equal(e))
+      entries[1].msg.should(equal("hallo 2"))
 
     It "Should roll over when maxEntries are reached":
       var w = newMemoryHandler(maxEntries = 20)

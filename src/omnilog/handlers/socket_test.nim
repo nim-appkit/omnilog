@@ -59,7 +59,10 @@ Suite "SocketHandler":
       var server = newStubServer()
       var w = newSocketHandler("localhost", 9991)
       w.write(newEntry("facility", Severity.INFO, "msg"))
+      w.write(newEntry("facility", Severity.ALERT, "msg 2"))
       w.close()
 
       server.receive()
       server.close()
+
+      server.receivedMessages.should haveLen 2
